@@ -1,9 +1,11 @@
+#![allow(clippy::new_ret_no_self)]
+
 use std::path::Path;
 
-use crate::utils::Day;
 use clap::Parser;
 
 mod day1;
+mod day2;
 mod utils;
 
 #[derive(Parser)]
@@ -24,11 +26,9 @@ fn main() {
     let filename = format!("day{}{}.txt", &args.day, suffix);
     let filepath = Path::new(&args.data_dir).join(&filename);
 
-    let day = match &args.day {
-        1 => day1::Day1::new(&filepath),
+    match &args.day {
+        1 => day1::Day1::new(&filepath).output_solutions(),
+        2 => day2::Day2::new(&filepath).output_solutions(),
         _ => panic!("Day {} not implemented", args.day),
     };
-
-    println!("Result A: {}", day.solve_a());
-    println!("Result B: {}", day.solve_b());
 }

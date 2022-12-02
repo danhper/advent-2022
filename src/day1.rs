@@ -22,10 +22,10 @@ pub struct Day1 {
 }
 
 impl Day1 {
-    pub fn new(filepath: &Path) -> Day1 {
-        Day1 {
+    pub fn new(filepath: &Path) -> Box<dyn Day> {
+        Box::new(Day1 {
             sorted_elfs: read_input(filepath),
-        }
+        })
     }
 }
 
