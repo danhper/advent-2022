@@ -1,14 +1,12 @@
-use std::fs::File;
-use std::io::{BufRead, self};
+use std::path::Path;
 
-fn read_input(filepath: &str) -> Vec<u64> {
-    let file = File::open(filepath).unwrap();
-    let lines = io::BufReader::new(file).lines();
+use crate::utils;
+use crate::utils::Day;
 
+fn read_input(filepath: &Path) -> Vec<u64> {
     let mut result = vec![0];
 
-    for line_ in lines {
-        let line = line_.unwrap();
+    for line in utils::read_lines(filepath) {
         if line.is_empty() {
             result.push(0);
         } else {
@@ -19,13 +17,24 @@ fn read_input(filepath: &str) -> Vec<u64> {
     result.sort_by(|a, b| b.cmp(a));
     result
 }
-
-pub fn solve_a() -> u64 {
-    let elfs = read_input("data/day1.txt");
-    elfs[0]
+pub struct Day1 {
+    sorted_elfs: Vec<u64>,
 }
 
-pub fn solve_b() -> u64 {
-    let elfs = read_input("data/day1.txt");
-    elfs[0] + elfs[1] + elfs[2]
+impl Day1 {
+    pub fn new(filepath: &Path) -> Day1 {
+        Day1 {
+            sorted_elfs: read_input(filepath),
+        }
+    }
+}
+
+impl Day for Day1 {
+    fn solve_a(&self) -> u64 {
+        self.sorted_elfs[0]
+    }
+
+    fn solve_b(&self) -> u64 {
+        self.sorted_elfs.iter().take(3).sum()
+    }
 }
