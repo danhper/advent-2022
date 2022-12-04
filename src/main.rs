@@ -7,6 +7,7 @@ use clap::Parser;
 mod day1;
 mod day2;
 mod day3;
+mod day4;
 mod utils;
 
 #[derive(Parser)]
@@ -31,6 +32,7 @@ fn main() {
         1 => day1::Day1::new(&filepath).output_solutions(),
         2 => day2::Day2::new(&filepath).output_solutions(),
         3 => day3::Day3::new(&filepath).output_solutions(),
+        4 => day4::Day4::new(&filepath).output_solutions(),
         _ => panic!("Day {} not implemented", args.day),
     };
 }
