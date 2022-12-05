@@ -18,12 +18,7 @@ where
 {
     let file = File::open(filepath).unwrap();
     let lines = io::BufReader::new(file).lines();
-
-    let mut result = vec![];
-    for line in lines {
-        result.push(line.unwrap());
-    }
-    result
+    lines.map(|line| line.unwrap()).collect()
 }
 
 pub fn split2<T, F>(s: &str, pat: &str, mut parse: F) -> (T, T)
