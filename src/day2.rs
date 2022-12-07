@@ -30,7 +30,7 @@ fn get_hand(player: &char, other: &char) -> char {
 fn read_input(filepath: &Path) -> Vec<(char, char)> {
     utils::read_lines(filepath)
         .iter()
-        .map(|line| utils::split2(line, " ", |v| v.parse().unwrap()))
+        .map(|line| utils::split2(line, " "))
         .collect()
 }
 

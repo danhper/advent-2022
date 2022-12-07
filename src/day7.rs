@@ -55,7 +55,7 @@ impl Folder {
                 );
             }
         } else {
-            let (size, file) = utils::hsplit2::<u64, String>(line, " ");
+            let (size, file) = utils::split2::<u64, String>(line, " ");
             self.children
                 .insert(file.to_string(), Node::File(file, size));
         }

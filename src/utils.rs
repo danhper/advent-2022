@@ -21,17 +21,7 @@ where
     lines.map(|line| line.unwrap()).collect()
 }
 
-pub fn split2<T, F>(s: &str, pat: &str, mut parse: F) -> (T, T)
-where
-    F: FnMut(&str) -> T,
-{
-    let mut parts = s.split(pat);
-    let a = parse(parts.next().unwrap());
-    let b = parse(parts.next().unwrap());
-    (a, b)
-}
-
-pub fn hsplit2<T, U>(s: &str, pat: &str) -> (T, U)
+pub fn split2<T, U>(s: &str, pat: &str) -> (T, U)
 where
     T: std::str::FromStr,
     U: std::str::FromStr,
