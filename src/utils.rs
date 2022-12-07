@@ -30,3 +30,16 @@ where
     let b = parse(parts.next().unwrap());
     (a, b)
 }
+
+pub fn hsplit2<T, U>(s: &str, pat: &str) -> (T, U)
+where
+    T: std::str::FromStr,
+    U: std::str::FromStr,
+    <T as std::str::FromStr>::Err: std::fmt::Debug,
+    <U as std::str::FromStr>::Err: std::fmt::Debug,
+{
+    let mut parts = s.split(pat);
+    let a = parts.next().unwrap().parse().unwrap();
+    let b = parts.next().unwrap().parse().unwrap();
+    (a, b)
+}
