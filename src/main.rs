@@ -11,6 +11,8 @@ mod day4;
 mod day5;
 mod day6;
 mod day7;
+mod day8;
+mod grid;
 mod utils;
 
 #[derive(Parser)]
@@ -39,6 +41,7 @@ fn main() {
         5 => day5::Day5::new(&filepath).output_solutions(),
         6 => day6::Day6::new(&filepath).output_solutions(),
         7 => day7::Day7::new(&filepath).output_solutions(),
+        8 => day8::Day8::new(&filepath).output_solutions(),
         _ => panic!("Day {} not implemented", args.day),
     };
 }
