@@ -32,16 +32,8 @@ impl Point {
         if (self.x - head.x).abs() <= 1 && (self.y - head.y).abs() <= 1 {
             return;
         }
-        match (self.x - head.x).signum() {
-            1 => self.x -= 1,
-            -1 => self.x += 1,
-            _ => (),
-        }
-        match (self.y - head.y).signum() {
-            1 => self.y -= 1,
-            -1 => self.y += 1,
-            _ => (),
-        }
+        self.x += (head.x - self.x).signum();
+        self.y += (head.y - self.y).signum();
     }
 }
 
