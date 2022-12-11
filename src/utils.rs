@@ -2,6 +2,8 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 
+use regex::{Regex, Captures};
+
 pub trait Day<A: std::fmt::Display = u64, B: std::fmt::Display = u64> {
     fn solve_a(&self) -> A;
     fn solve_b(&self) -> B;
@@ -40,4 +42,16 @@ where
     <T as std::str::FromStr>::Err: std::fmt::Debug,
 {
     lines.iter().map(|l| l.parse().unwrap()).collect()
+}
+
+pub fn get_caps<'a>(re: &str, s: &'a str) -> Captures<'a> {
+    Regex::new(re).unwrap().captures(s).unwrap()
+}
+
+pub fn get_cap<T>(caps: &Captures, i: usize) -> T
+where
+    T: std::str::FromStr,
+    <T as std::str::FromStr>::Err: std::fmt::Debug,
+{
+    caps.get(i).unwrap().as_str().parse().unwrap()
 }
