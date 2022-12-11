@@ -7,8 +7,8 @@ pub trait Day<A: std::fmt::Display = u64, B: std::fmt::Display = u64> {
     fn solve_b(&self) -> B;
 
     fn output_solutions(&self) {
-        println!("Part A: {}", self.solve_a());
-        println!("Part B: {}", self.solve_b());
+        println!("Part A:\n{}", self.solve_a());
+        println!("Part B:\n{}", self.solve_b());
     }
 }
 
@@ -32,4 +32,12 @@ where
     let a = parts.next().unwrap().parse().unwrap();
     let b = parts.next().unwrap().parse().unwrap();
     (a, b)
+}
+
+pub fn parse_lines<T>(lines: &[String]) -> Vec<T>
+where
+    T: std::str::FromStr,
+    <T as std::str::FromStr>::Err: std::fmt::Debug,
+{
+    lines.iter().map(|l| l.parse().unwrap()).collect()
 }
