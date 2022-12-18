@@ -17,6 +17,7 @@ mod day10;
 mod day11;
 mod day12;
 mod day13;
+mod day14;
 mod grid;
 mod utils;
 
@@ -52,6 +53,7 @@ fn main() {
         11 => day11::Day11::new(&filepath).output_solutions(),
         12 => day12::Day12::new(&filepath).output_solutions(),
         13 => day13::Day13::new(&filepath).output_solutions(),
+        14 => day14::Day14::new(&filepath).output_solutions(),
         _ => panic!("Day {} not implemented", args.day),
     };
 }
