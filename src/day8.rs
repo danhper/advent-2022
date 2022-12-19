@@ -18,8 +18,8 @@ impl Day8 {
 
     fn compute_visible<T, U>(&self, visible: &mut HashSet<Point>, range_x: T, range_y: U)
     where
-        T: IntoIterator<Item = u64>,
-        U: IntoIterator<Item = u64> + std::clone::Clone,
+        T: IntoIterator<Item = i64>,
+        U: IntoIterator<Item = i64> + std::clone::Clone,
     {
         for x in range_x {
             let mut maxes = vec![-1, -1];
@@ -49,8 +49,8 @@ impl Day8 {
             let current_height = self.grid.cells.get(&point);
             if point.x == 0
                 || point.y == 0
-                || point.x >= max_x
-                || point.y >= max_y
+                || point.x >= max_x as i64
+                || point.y >= max_y as i64
                 || current_height.unwrap() >= height
             {
                 break score;
@@ -74,11 +74,15 @@ impl Day8 {
 impl Day for Day8 {
     fn solve_a(&self) -> u64 {
         let mut visible = HashSet::new();
-        self.compute_visible(&mut visible, 0..self.grid.width, 0..self.grid.height);
         self.compute_visible(
             &mut visible,
-            (0..self.grid.width).rev(),
-            (0..self.grid.height).rev(),
+            0..self.grid.width as i64,
+            0..self.grid.height as i64,
+        );
+        self.compute_visible(
+            &mut visible,
+            (0..self.grid.width as i64).rev(),
+            (0..self.grid.height as i64).rev(),
         );
         visible.len() as u64
     }

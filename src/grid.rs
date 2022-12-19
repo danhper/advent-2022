@@ -1,18 +1,22 @@
-use std::{collections::{HashMap, HashSet}, fmt, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt,
+    str::FromStr,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Point {
-    pub x: u64,
-    pub y: u64,
+    pub x: i64,
+    pub y: i64,
 }
 
 impl Point {
-    pub fn new(x: u64, y: u64) -> Self {
+    pub fn new(x: i64, y: i64) -> Self {
         Self { x, y }
     }
 
     pub fn manhattan_distance(&self, other: &Self) -> u64 {
-        ((self.x as i64 - other.x as i64).abs() + (self.y as i64 - other.y as i64).abs()) as u64
+        ((self.x - other.x).abs() + (self.y - other.y).abs()) as u64
     }
 }
 
@@ -31,22 +35,8 @@ pub struct Grid<T> {
 
 impl<T> Grid<T> {
     pub fn get_neighbors(&self, point: &Point, include_diagonals: bool) -> HashSet<Point> {
+        let (width, height) = (self.width as i64, self.height as i64);
         let mut neighbors = HashSet::new();
-        // if point.x > 0 {
-        //     neighbors.insert(Point::new(point.x - 1, point.y));
-        // }
-
-        // if point.y > 0 {
-        //     neighbors.insert(Point::new(point.x, point.y - 1));
-        // }
-
-        // if point.x + 1 < self.width {
-        //     neighbors.insert(Point::new(point.x + 1, point.y));
-        // }
-
-        // if point.y + 1 < self.height {
-        //     neighbors.insert(Point::new(point.x, point.y + 1));
-        // }
         for x in point.x.saturating_sub(1)..=point.x + 1 {
             for y in point.y.saturating_sub(1)..=point.y + 1 {
                 if (x == point.x && y == point.y)
@@ -54,7 +44,7 @@ impl<T> Grid<T> {
                 {
                     continue;
                 }
-                if x < self.width && y < self.height {
+                if x < width && y < height {
                     neighbors.insert(Point::new(x, y));
                 }
             }
@@ -80,7 +70,7 @@ where
             width = line.len() as u64;
             for (x, c) in line.chars().enumerate() {
                 cells.insert(
-                    Point::new(x as u64, y as u64),
+                    Point::new(x as i64, y as i64),
                     c.to_string().parse().unwrap(),
                 );
             }
@@ -98,7 +88,7 @@ impl<T: fmt::Display> fmt::Display for Grid<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for y in 0..self.height {
             for x in 0..self.width {
-                let c = self.cells.get(&Point::new(x as u64, y as u64)).unwrap();
+                let c = self.cells.get(&Point::new(x as i64, y as i64)).unwrap();
                 write!(f, "{}", c)?;
             }
             writeln!(f)?;

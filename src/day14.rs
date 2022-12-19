@@ -11,9 +11,9 @@ pub struct Day14 {
 
 struct Env {
     grid: HashMap<Point, char>,
-    bottom: u64,
-    left: u64,
-    right: u64,
+    bottom: i64,
+    left: i64,
+    right: i64,
 }
 
 impl Env {
