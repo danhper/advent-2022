@@ -18,21 +18,24 @@ impl Day12 {
         Box::new(Self { grid, end })
     }
 
-    fn get_cell(&self, point: &Point) -> char {
-        match self.grid.get(point).unwrap() {
-            'E' => 'E',
-            'S' => 'a',
-            c => *c,
+    fn get_cell(&self, point: &Point) -> Option<char> {
+        match self.grid.get(point) {
+            Some('E') => Some('E'),
+            Some('S') => Some('a'),
+            Some(c) => Some(*c),
+            None => None,
         }
     }
 
     fn get_valid_neighbors(&self, point: &Point) -> HashSet<Point> {
         let mut neighbors = self.grid.get_neighbors(point, false);
-        let current_val = self.get_cell(point);
-        neighbors.retain(|p| {
-            let next_val = self.get_cell(p);
-            (next_val == 'E' && current_val == 'z')
-                || (next_val != 'E' && next_val as u64 <= current_val as u64 + 1)
+        let current_val = self.get_cell(point).unwrap();
+        neighbors.retain(|p| match self.get_cell(p) {
+            Some(next_val) => {
+                (next_val == 'E' && current_val == 'z')
+                    || (next_val != 'E' && next_val as u64 <= current_val as u64 + 1)
+            }
+            None => false,
         });
         neighbors
     }
@@ -41,7 +44,7 @@ impl Day12 {
         let mut open_set = HashSet::from([*start]);
         let mut cheapest_cost = HashMap::from([(*start, 0)]);
         let mut estimated_cost = HashMap::from([(*start, start.manhattan_distance(&self.end))]);
-        while !open_set.is_empty(){
+        while !open_set.is_empty() {
             let current = *open_set
                 .iter()
                 .min_by_key(|p| estimated_cost.get(p).unwrap())

@@ -37,8 +37,8 @@ impl<T> Grid<T> {
     pub fn get_neighbors(&self, point: &Point, include_diagonals: bool) -> HashSet<Point> {
         let (width, height) = (self.width as i64, self.height as i64);
         let mut neighbors = HashSet::new();
-        for x in point.x.saturating_sub(1)..=point.x + 1 {
-            for y in point.y.saturating_sub(1)..=point.y + 1 {
+        for x in point.x- 1..=point.x + 1 {
+            for y in point.y - 1..=point.y + 1 {
                 if (x == point.x && y == point.y)
                     || !(include_diagonals || x == point.x || y == point.y)
                 {
