@@ -41,6 +41,23 @@ where
     (a, b)
 }
 
+pub fn split3<T, U, V>(s: &str, pat: &str) -> (T, U, V)
+where
+    T: std::str::FromStr,
+    U: std::str::FromStr,
+    V: std::str::FromStr,
+    <T as std::str::FromStr>::Err: std::fmt::Debug,
+    <U as std::str::FromStr>::Err: std::fmt::Debug,
+    <V as std::str::FromStr>::Err: std::fmt::Debug,
+{
+    let mut parts = s.split(pat);
+    let a = parts.next().unwrap().parse().unwrap();
+    let b = parts.next().unwrap().parse().unwrap();
+    let c = parts.next().unwrap().parse().unwrap();
+    (a, b, c)
+}
+
+
 pub fn parse_lines<T>(lines: &[String]) -> Vec<T>
 where
     T: std::str::FromStr,
