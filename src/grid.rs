@@ -1,6 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
-    fmt,
+    fmt::{self, Debug},
     str::FromStr,
 };
 
@@ -20,6 +20,17 @@ impl Point {
     }
 }
 
+impl std::ops::Add for Point {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+
 impl fmt::Display for Point {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
@@ -30,14 +41,23 @@ impl fmt::Display for Point {
 pub struct Grid<T> {
     pub width: u64,
     pub height: u64,
+    pub going_down: bool,
     pub cells: HashMap<Point, T>,
 }
 
 impl<T> Grid<T> {
+    pub fn new(width: u64, height: u64, going_down: bool) -> Self {
+        Self {
+            width,
+            height,
+            going_down,
+            cells: HashMap::new(),
+        }
+    }
     pub fn get_neighbors(&self, point: &Point, include_diagonals: bool) -> HashSet<Point> {
         let (width, height) = (self.width as i64, self.height as i64);
         let mut neighbors = HashSet::new();
-        for x in point.x- 1..=point.x + 1 {
+        for x in point.x - 1..=point.x + 1 {
             for y in point.y - 1..=point.y + 1 {
                 if (x == point.x && y == point.y)
                     || !(include_diagonals || x == point.x || y == point.y)
@@ -80,16 +100,24 @@ where
             width,
             height,
             cells,
+            going_down: true,
         }
     }
 }
 
-impl<T: fmt::Display> fmt::Display for Grid<T> {
+impl<T: fmt::Display + Clone> fmt::Display for Grid<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for y in 0..self.height {
+        for mut y in 0..self.height {
+            if !self.going_down {
+                y = self.height - y - 1;
+            }
             for x in 0..self.width {
-                let c = self.cells.get(&Point::new(x as i64, y as i64)).unwrap();
-                write!(f, "{}", c)?;
+                let c = self.cells.get(&Point::new(x as i64, y as i64)).cloned();
+                if let Some(c) = c {
+                    write!(f, "{}", c)?;
+                } else {
+                    write!(f, ".")?;
+                }
             }
             writeln!(f)?;
         }
@@ -142,5 +170,12 @@ mod tests {
                 Point::new(3, 2),
             ])
         );
+    }
+
+    #[test]
+    fn add_points() {
+        let p1 = Point::new(1, 2);
+        let p2 = Point::new(3, 4);
+        assert_eq!(p1 + p2, Point::new(4, 6));
     }
 }
