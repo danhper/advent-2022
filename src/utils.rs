@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
+use std::time::Instant;
 
 use regex::{Regex, Captures};
 
@@ -9,8 +10,12 @@ pub trait Day<A: std::fmt::Display = u64, B: std::fmt::Display = u64> {
     fn solve_b(&self) -> B;
 
     fn output_solutions(&self) {
-        println!("Part A:\n{}", self.solve_a());
-        println!("Part B:\n{}", self.solve_b());
+        let before_a = Instant::now();
+        let result_a = self.solve_a();
+        println!("Part A ({:.2?}):\n{}", before_a.elapsed(), result_a);
+        let before_b = Instant::now();
+        let result_b = self.solve_b();
+        println!("Part B ({:.2?}):\n{}", before_b.elapsed(), result_b);
     }
 }
 
