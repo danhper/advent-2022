@@ -3,7 +3,7 @@ use std::io::{self, BufRead};
 use std::path::Path;
 use std::time::Instant;
 
-use regex::{Regex, Captures};
+use regex::{Captures, Regex};
 
 pub trait Day<A: std::fmt::Display = u64, B: std::fmt::Display = u64> {
     fn solve_a(&self) -> A;
@@ -57,7 +57,6 @@ where
     (a, b, c)
 }
 
-
 pub fn parse_lines<T>(lines: &[String]) -> Vec<T>
 where
     T: std::str::FromStr,
@@ -67,6 +66,10 @@ where
 }
 
 pub fn get_caps<'a>(re: &str, s: &'a str) -> Captures<'a> {
+    Regex::new(re).unwrap().captures(s).unwrap()
+}
+
+pub fn captures<'t>(re: &str, s: &'t str) -> Captures<'t> {
     Regex::new(re).unwrap().captures(s).unwrap()
 }
 
