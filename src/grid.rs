@@ -43,6 +43,7 @@ pub struct Grid<T> {
     pub height: u64,
     pub going_down: bool,
     pub cells: HashMap<Point, T>,
+    pub empty_cell: char,
 }
 
 impl<T> Grid<T> {
@@ -52,6 +53,7 @@ impl<T> Grid<T> {
             height,
             going_down,
             cells: HashMap::new(),
+            empty_cell: '.',
         }
     }
     pub fn get_neighbors(&self, point: &Point, include_diagonals: bool) -> HashSet<Point> {
@@ -87,7 +89,7 @@ where
         let height = lines.len() as u64;
         let mut width = 0;
         for (y, line) in lines.iter().enumerate() {
-            width = line.len() as u64;
+            width = width.max(line.len() as u64);
             for (x, c) in line.chars().enumerate() {
                 cells.insert(
                     Point::new(x as i64, y as i64),
@@ -101,6 +103,7 @@ where
             height,
             cells,
             going_down: true,
+            empty_cell: '.',
         }
     }
 }
@@ -116,7 +119,7 @@ impl<T: fmt::Display + Clone> fmt::Display for Grid<T> {
                 if let Some(c) = c {
                     write!(f, "{}", c)?;
                 } else {
-                    write!(f, ".")?;
+                    write!(f, "{}", self.empty_cell)?;
                 }
             }
             writeln!(f)?;
