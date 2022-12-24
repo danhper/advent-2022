@@ -80,3 +80,8 @@ where
 {
     caps.get(i).unwrap().as_str().parse().unwrap()
 }
+
+pub fn get_cap_str(caps: &Captures, i: usize) -> String
+{
+    caps.get(i).unwrap().as_str().to_string()
+}
