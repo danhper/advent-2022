@@ -46,6 +46,21 @@ pub struct Grid<T> {
     pub empty_cell: char,
 }
 
+pub fn get_neighbors(point: &Point, include_diagonals: bool) -> HashSet<Point> {
+    let mut neighbors = HashSet::new();
+    for x in point.x - 1..=point.x + 1 {
+        for y in point.y - 1..=point.y + 1 {
+            if (x == point.x && y == point.y)
+                || !(include_diagonals || x == point.x || y == point.y)
+            {
+                continue;
+            }
+            neighbors.insert(Point::new(x, y));
+        }
+    }
+    neighbors
+}
+
 impl<T> Grid<T> {
     pub fn new(width: u64, height: u64, going_down: bool) -> Self {
         Self {
@@ -56,22 +71,11 @@ impl<T> Grid<T> {
             empty_cell: '.',
         }
     }
+
     pub fn get_neighbors(&self, point: &Point, include_diagonals: bool) -> HashSet<Point> {
-        let (width, height) = (self.width as i64, self.height as i64);
-        let mut neighbors = HashSet::new();
-        for x in point.x - 1..=point.x + 1 {
-            for y in point.y - 1..=point.y + 1 {
-                if (x == point.x && y == point.y)
-                    || !(include_diagonals || x == point.x || y == point.y)
-                {
-                    continue;
-                }
-                if x < width && y < height {
-                    neighbors.insert(Point::new(x, y));
-                }
-            }
-        }
-        neighbors
+        get_neighbors(point, include_diagonals).into_iter().filter(|p| {
+            p.x < self.width as i64 && p.y < self.height as i64
+        }).collect()
     }
 
     pub fn get(&self, point: &Point) -> Option<&T> {
