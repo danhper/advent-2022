@@ -7,6 +7,12 @@ use crate::{
 
 type Grid = GenericGrid<char>;
 
+const ZONE_SIZE: i64 = 50;
+const RIGHT: Point = Point { x: 1, y: 0 };
+const DOWN: Point = Point { x: 0, y: 1 };
+const LEFT: Point = Point { x: -1, y: 0 };
+const UP: Point = Point { x: 0, y: -1 };
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Direction {
     Left,
@@ -29,36 +35,123 @@ struct Player {
 struct Env {
     grid: Grid,
     player: Player,
+    zones: Vec<Point>,
 }
 
 impl Env {
-    fn get_next_point(&self, position: Point, direction: Point) -> (Point, char) {
+    fn new(grid: Grid) -> Env {
+        let player = Player::from(&grid);
+        let zones = Self::get_zones(&grid);
+        Env {
+            grid,
+            player,
+            zones,
+        }
+    }
+
+    fn get_zones(_grid: &Grid) -> Vec<Point> {
+        vec![
+            Point::new(50, 0),
+            Point::new(0, 150),
+            Point::new(50, 100),
+            Point::new(100, 0),
+            Point::new(50, 50),
+            Point::new(0, 100),
+        ]
+    }
+
+    fn get_zone(&self, point: &Point) -> Option<usize> {
+        self.zones.iter().position(|p| {
+            (p.x..p.x + ZONE_SIZE).contains(&point.x) && (p.y..p.y + ZONE_SIZE).contains(&point.y)
+        })
+    }
+
+    fn to_relative(&self, point: &Point, zone_id: usize) -> Point {
+        let zone = self.zones[zone_id];
+        Point::new(point.x - zone.x, point.y - zone.y)
+    }
+
+    fn to_absolute(&self, point: &Point, zone_id: usize) -> Point {
+        let zone = self.zones[zone_id];
+        Point::new(point.x + zone.x, point.y + zone.y)
+    }
+
+    fn get_transition(
+        &self,
+        zone_id: usize,
+        direction: Point,
+    ) -> (usize, Point, fn(Point) -> Point) {
+        match (zone_id, direction) {
+            (0, UP) => (1, RIGHT, |p| Point::new(p.y, p.x)),
+            (0, LEFT) => (5, RIGHT, |p| Point::new(p.x, ZONE_SIZE - 1 - p.y)),
+            (1, LEFT) => (0, DOWN, |p| Point::new(p.y, p.x)),
+            (1, DOWN) => (3, DOWN, |p| Point::new(p.x, ZONE_SIZE - 1 - p.y)),
+            (1, RIGHT) => (2, UP, |p| Point::new(p.y, p.x)),
+            (2, DOWN) => (1, LEFT, |p| Point::new(p.y, p.x)),
+            (2, RIGHT) => (3, LEFT, |p| Point::new(p.x, ZONE_SIZE - 1 - p.y)),
+            (3, RIGHT) => (2, LEFT, |p| Point::new(p.x, ZONE_SIZE - 1 - p.y)),
+            (3, DOWN) => (4, LEFT, |p| Point::new(p.y, p.x)),
+            (3, UP) => (1, UP, |p| Point::new(p.x, ZONE_SIZE - 1 - p.y)),
+            (4, RIGHT) => (3, UP, |p| Point::new(p.y, p.x)),
+            (4, LEFT) => (5, DOWN, |p| Point::new(p.y, p.x)),
+            (5, UP) => (4, RIGHT, |p| Point::new(p.y, p.x)),
+            (5, LEFT) => (0, RIGHT, |p| Point::new(p.x, ZONE_SIZE - 1 - p.y)),
+            _ => panic!("Unexpected transition: {} {}", zone_id, direction),
+        }
+    }
+
+    fn get_next_state(&self, position: Point, direction: Point) -> (Point, char, Point) {
         let mut next_point = position;
         loop {
             let next_x = (next_point.x + direction.x).rem_euclid(self.grid.width as i64);
             let next_y = (next_point.y + direction.y).rem_euclid(self.grid.height as i64);
             next_point = Point::new(next_x, next_y);
             if let Some(c) = self.grid.get(&next_point) {
-                break (next_point, *c);
+                break (next_point, *c, direction);
             }
         }
     }
 
-    fn find_next_point(&self) -> Option<Point> {
-        match self.get_next_point(self.player.position, self.player.direction) {
-            (p, '.') => Some(p),
-            (_, '#') => None,
-            (_, c) => panic!("Unexpected character: {}", c),
+    fn get_next_state_3d(&self, position: Point, direction: Point) -> (Point, char, Point) {
+        let next_point_candidate = position + direction;
+        let current_zone = self.get_zone(&position).unwrap();
+        if self.get_zone(&next_point_candidate).is_some() {
+            let value = self.grid.get(&next_point_candidate).unwrap();
+            return (next_point_candidate, *value, direction);
+        }
+        let relative_point = self.to_relative(&position, current_zone);
+        let (next_zone, new_direction, f) = self.get_transition(current_zone, direction);
+        let next_point = self.to_absolute(&f(relative_point), next_zone);
+        let value = self.grid.get(&next_point).unwrap();
+        (next_point, *value, new_direction)
+    }
+
+    fn compute_next_state(&self, is_3d: bool) -> Option<Player> {
+        let next_state_f = if is_3d {
+            Env::get_next_state_3d
+        } else {
+            Env::get_next_state
+        };
+        match next_state_f(self, self.player.position, self.player.direction) {
+            (p, '.', d) => Some(Player::new(p, d)),
+            (_, '#', _) => None,
+            (_, c, _) => panic!("Unexpected character: {}", c),
         }
     }
 
-    fn execute_instruction(&mut self, instruction: &Instruction) {
+    fn execute_instructions(&mut self, instructions: &[Instruction], is_3d: bool) {
+        for instr in instructions.iter() {
+            self.execute_instruction(instr, is_3d);
+        }
+    }
+
+    fn execute_instruction(&mut self, instruction: &Instruction, is_3d: bool) {
         match instruction {
             Instruction::Turn(dir) => self.player.turn(*dir),
             Instruction::Advance(dist) => {
                 for _ in 0..*dist {
-                    match self.find_next_point() {
-                        Some(next_point) => self.player.position = next_point,
+                    match self.compute_next_state(is_3d) {
+                        Some(player) => self.player = player,
                         None => break,
                     }
                 }
@@ -68,7 +161,11 @@ impl Env {
 }
 
 impl Player {
-    fn new(grid: &Grid) -> Player {
+    fn new(position: Point, direction: Point) -> Player {
+        Player { position, direction }
+    }
+
+    fn from(grid: &Grid) -> Player {
         let x_start = grid
             .cells
             .iter()
@@ -78,7 +175,7 @@ impl Player {
             .unwrap();
         Player {
             position: Point::new(x_start, 0),
-            direction: Point::new(1, 0),
+            direction: RIGHT,
         }
     }
 
@@ -92,11 +189,11 @@ impl Player {
     fn compute_score(&self) -> u64 {
         // 0 for right (>), 1 for down (v), 2 for left (<), and 3 for up (^)
         let direction_score = match self.direction {
-            Point { x: 1, y: 0 } => 0,
-            Point { x: 0, y: 1 } => 1,
-            Point { x: -1, y: 0 } => 2,
-            Point { x: 0, y: -1 } => 3,
-            _ => panic!("Unexpected position: {:?}", self.position),
+            RIGHT => 0,
+            DOWN => 1,
+            LEFT => 2,
+            UP => 3,
+            _ => panic!("Unexpected direction: {:?}", self.direction),
         };
         (1000 * (self.position.y + 1) + 4 * (self.position.x + 1) + direction_score) as u64
     }
@@ -146,18 +243,14 @@ impl Day22 {
 
 impl Day for Day22 {
     fn solve_a(&self) -> u64 {
-        let player = Player::new(&self.grid);
-        let mut env = Env {
-            grid: self.grid.clone(),
-            player,
-        };
-        for instr in self.instructions.iter() {
-            env.execute_instruction(instr);
-        }
+        let mut env = Env::new(self.grid.clone());
+        env.execute_instructions(&self.instructions, false);
         env.player.compute_score()
     }
 
     fn solve_b(&self) -> u64 {
-        0
+        let mut env = Env::new(self.grid.clone());
+        env.execute_instructions(&self.instructions, true);
+        env.player.compute_score()
     }
 }
