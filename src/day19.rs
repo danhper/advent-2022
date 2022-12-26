@@ -2,109 +2,100 @@ use std::{collections::HashSet, path::Path};
 
 use crate::utils::{captures, get_cap, read_lines, Day};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct State {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct Materials {
     ore: u64,
     clay: u64,
     obsidian: u64,
     geode: u64,
+}
 
-    ore_robot_pending: bool,
-    clay_robot_pending: bool,
-    obsidian_robot_pending: bool,
-    geode_robot_pending: bool,
+impl Materials {
+    fn new(ore: u64) -> Materials {
+        Materials {
+            ore,
+            clay: 0,
+            obsidian: 0,
+            geode: 0,
+        }
+    }
 
-    ore_robots: u64,
-    clay_robots: u64,
-    obsidian_robots: u64,
-    geode_robots: u64,
+    fn add(&mut self, other: &Materials) {
+        self.ore += other.ore;
+        self.clay += other.clay;
+        self.obsidian += other.obsidian;
+        self.geode += other.geode;
+    }
+
+    fn modify_clone(&self, f: fn(&mut Materials)) -> Materials {
+        let mut materials = *self;
+        f(&mut materials);
+        materials
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct State {
+    materials: Materials,
+    robots: Materials,
+    next: Option<Materials>,
 }
 
 impl State {
     fn new() -> State {
         State {
-            ore: 0,
-            clay: 0,
-            obsidian: 0,
-            geode: 0,
-
-            ore_robots: 1,
-            clay_robots: 0,
-            obsidian_robots: 0,
-            geode_robots: 0,
-
-            ore_robot_pending: false,
-            clay_robot_pending: false,
-            obsidian_robot_pending: false,
-            geode_robot_pending: false,
+            materials: Materials::new(0),
+            robots: Materials::new(1),
+            next: None,
         }
     }
 
     fn advance(&mut self) {
-        self.ore += self.ore_robots;
-        self.clay += self.clay_robots;
-        self.obsidian += self.obsidian_robots;
-        self.geode += self.geode_robots;
-        if self.geode_robot_pending {
-            self.geode_robots += 1;
-            self.geode_robot_pending = false;
-        }
-        if self.clay_robot_pending {
-            self.clay_robots += 1;
-            self.clay_robot_pending = false;
-        }
-        if self.obsidian_robot_pending {
-            self.obsidian_robots += 1;
-            self.obsidian_robot_pending = false;
-        }
-        if self.ore_robot_pending {
-            self.ore_robots += 1;
-            self.ore_robot_pending = false;
+        self.materials.add(&self.robots);
+        if let Some(robots) = self.next {
+            self.robots = robots;
+            self.next = None;
         }
     }
 
     fn get_next_states(&self, blueprint: &Blueprint) -> Vec<State> {
-        let mut states = Vec::new();
+        let mut states = vec![];
 
-        if self.ore >= blueprint.geode.0 && self.obsidian >= blueprint.geode.1 {
+        if self.materials.ore >= blueprint.geode.0 && self.materials.obsidian >= blueprint.geode.1 {
             let mut state = self.clone();
-            state.ore -= blueprint.geode.0;
-            state.obsidian -= blueprint.geode.1;
-            state.geode_robot_pending = true;
+            state.materials.ore -= blueprint.geode.0;
+            state.materials.obsidian -= blueprint.geode.1;
+            state.next = Some(self.robots.modify_clone(|robots| robots.geode += 1));
             states.push(state);
             return states;
         }
 
-        if self.ore < blueprint.ore
-            || self.ore < blueprint.clay
-            || self.ore < blueprint.obsidian.0
-            || self.clay < blueprint.obsidian.1
-        {
+        if self.materials.ore < blueprint.ore {
             states.push(self.clone());
         }
 
-        if self.ore >= blueprint.obsidian.0
-            && self.clay >= blueprint.obsidian.1
-            && self.obsidian_robots < blueprint.geode.1
+        if self.materials.ore >= blueprint.obsidian.0
+            && self.materials.clay >= blueprint.obsidian.1
+            && self.robots.obsidian < blueprint.geode.1
         {
             let mut state = self.clone();
-            state.ore -= blueprint.obsidian.0;
-            state.clay -= blueprint.obsidian.1;
-            state.obsidian_robot_pending = true;
+            state.materials.ore -= blueprint.obsidian.0;
+            state.materials.clay -= blueprint.obsidian.1;
+            state.next = Some(self.robots.modify_clone(|robots| robots.obsidian += 1));
             states.push(state);
         }
 
-        if self.ore >= blueprint.ore && self.ore_robots < blueprint.max_ore_robots() {
+        if self.materials.ore >= blueprint.ore && self.robots.ore < blueprint.max_ore_robots() {
             let mut state = self.clone();
-            state.ore -= blueprint.ore;
-            state.ore_robot_pending = true;
+            state.materials.ore -= blueprint.ore;
+            state.next = Some(self.robots.modify_clone(|robots| robots.ore += 1));
             states.push(state);
         }
 
-        if self.ore >= blueprint.clay && self.clay_robots < blueprint.obsidian.1 {
+        if self.materials.ore >= blueprint.clay && self.robots.clay < blueprint.obsidian.1 {
             let mut state = self.clone();
-            state.ore -= blueprint.clay;
-            state.clay_robot_pending = true;
+            state.materials.ore -= blueprint.clay;
+            state.next = Some(self.robots.modify_clone(|robots| robots.clay += 1));
             states.push(state);
         }
 
@@ -133,7 +124,11 @@ impl Blueprint {
             states = new_states;
         }
 
-        states.iter().map(|state| state.geode).max().unwrap()
+        states
+            .iter()
+            .map(|state| state.materials.geode)
+            .max()
+            .unwrap()
     }
 
     fn max_ore_robots(&self) -> u64 {
