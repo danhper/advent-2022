@@ -69,12 +69,11 @@ impl Day5 {
     }
 
     fn execute_instruction_b(&mut self, instruction: &Instruction) {
-        let mut popped_elems = vec![];
-        for _ in 0..instruction.count {
-            popped_elems.push(self.stacks[instruction.from - 1].pop().unwrap());
-        }
-        popped_elems.reverse();
-        self.stacks[instruction.to - 1].append(&mut popped_elems);
+        let len = self.stacks[instruction.from - 1].len();
+        let mut removed = self.stacks[instruction.from - 1]
+            .splice((len - instruction.count as usize)..len, vec![])
+            .collect();
+        self.stacks[instruction.to - 1].append(&mut removed);
     }
 
     fn solve(&self, problem: char) -> String {
